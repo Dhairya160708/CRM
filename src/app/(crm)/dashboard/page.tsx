@@ -107,9 +107,9 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col flex-1">
       <Header title="Dashboard" subtitle="Overview of your trading operations" />
-      <main className="flex-1 p-6 space-y-6">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat) => (
             <Link key={stat.title} href={stat.href}>
               <Card className="hover:border-teal-crm/30 transition-colors cursor-pointer">

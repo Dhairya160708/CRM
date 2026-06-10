@@ -144,16 +144,16 @@ export default function OrderDetailPage() {
   return (
     <div className="flex flex-col flex-1">
       <Header title={order.orderNumber} subtitle={`${order.product.name} · ${order.quantity} ${order.unit}`} />
-      <main className="flex-1 p-6 space-y-6">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
         {/* Top bar */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <Link href="/orders">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${ORDER_STATUS_COLORS[order.status]}`}>
               {ORDER_STATUS_LABELS[order.status]}
             </span>
@@ -226,7 +226,7 @@ export default function OrderDetailPage() {
 
               <TabsContent value="details" className="space-y-4 mt-4">
                 <Card>
-                  <CardContent className="p-5 grid grid-cols-2 gap-4">
+                  <CardContent className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
                       { label: "Product", value: order.product.name },
                       { label: "CAS Number", value: order.product.casNumber ?? "—" },

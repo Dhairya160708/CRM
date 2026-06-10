@@ -75,7 +75,7 @@ export default function ManufacturerDetailPage() {
   return (
     <div className="flex flex-col flex-1">
       <Header title={manufacturer.name} subtitle={manufacturer.location} />
-      <main className="flex-1 p-6 space-y-6">
+      <main className="flex-1 p-4 md:p-6 space-y-6">
         <div className="flex items-center justify-between">
           <Link href="/manufacturers"><Button variant="ghost" size="sm"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button></Link>
           <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}><Pencil className="w-3.5 h-3.5 mr-1.5" />Edit</Button>

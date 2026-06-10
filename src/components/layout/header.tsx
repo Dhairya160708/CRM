@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
-import { Bell, LogOut, Search, User } from "lucide-react";
+import { Bell, LogOut, Menu, Search, User } from "lucide-react";
+import { useSidebar } from "@/components/layout/sidebar-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +24,7 @@ interface HeaderProps {
 export function Header({ title, subtitle }: HeaderProps) {
   const { data: session } = useSession();
   const router = useRouter();
+  const { toggle } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
 
   function handleSearch(e: React.FormEvent) {
@@ -39,14 +41,23 @@ export function Header({ title, subtitle }: HeaderProps) {
   }
 
   return (
-    <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6 sticky top-0 z-30">
-      <div>
-        <h1 className="text-base font-semibold text-foreground leading-none">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-        )}
+    <header className="h-14 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 md:px-6 sticky top-0 z-20 gap-3">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          className="md:hidden w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+          onClick={toggle}
+          aria-label="Toggle menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-base font-semibold text-foreground leading-none truncate">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

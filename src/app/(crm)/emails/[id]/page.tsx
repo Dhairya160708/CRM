@@ -108,7 +108,7 @@ export default function EmailThreadPage() {
         title={thread.subject}
         subtitle={`${thread.messages.length} messages`}
       />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 md:p-6">
         <div className="mb-4">
           <Link href="/emails">
             <Button variant="ghost" size="sm">

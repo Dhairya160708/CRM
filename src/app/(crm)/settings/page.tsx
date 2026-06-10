@@ -64,7 +64,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col flex-1">
       <Header title="Settings" subtitle="System configuration and management" />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 md:p-6">
         <Tabs defaultValue="session">
           <TabsList className="mb-6">
             <TabsTrigger value="session">Session</TabsTrigger>

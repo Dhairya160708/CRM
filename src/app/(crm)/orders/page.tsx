@@ -90,10 +90,10 @@ function OrdersContent() {
   return (
     <div className="flex flex-col flex-1">
       <Header title="Orders" subtitle={`${total} total orders`} />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 md:p-6">
         {/* Toolbar */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <div className="relative flex-1 min-w-[180px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input
               value={searchInput}
@@ -113,7 +113,7 @@ function OrdersContent() {
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={() => setShowCreateDialog(true)} className="ml-auto">
+          <Button onClick={() => setShowCreateDialog(true)} className="sm:ml-auto">
             <Plus className="w-4 h-4 mr-2" />
             New Order
           </Button>

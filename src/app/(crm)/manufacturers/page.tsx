@@ -52,18 +52,18 @@ export default function ManufacturersPage() {
   return (
     <div className="flex flex-col flex-1">
       <Header title="Manufacturers" subtitle={`${manufacturers.length} manufacturers`} />
-      <main className="flex-1 p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="relative flex-1 max-w-sm">
+      <main className="flex-1 p-4 md:p-6">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
+          <div className="relative flex-1 min-w-[180px] max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search manufacturers..." className="pl-9" />
           </div>
-          <Button onClick={() => setShowCreate(true)} className="ml-auto">
+          <Button onClick={() => setShowCreate(true)} className="sm:ml-auto">
             <Plus className="w-4 h-4 mr-2" />New Manufacturer
           </Button>
         </div>
 
-        <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <div className="border border-border rounded-xl overflow-hidden bg-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary/50">

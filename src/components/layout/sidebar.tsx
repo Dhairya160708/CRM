@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
+import { useSidebar } from "@/components/layout/sidebar-context";
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +22,7 @@ import {
   Settings,
   Shield,
   ChevronRight,
+  X,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -37,6 +39,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { open, setOpen } = useSidebar();
   const role = session?.user?.role ?? "VIEWER";
   const isDemo = !!session?.user?.isDemo;
   const DEMO_DISABLED_HREFS = ["/reports", "/settings"];
@@ -48,16 +51,36 @@ export function Sidebar() {
   );
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-60 bg-navy-900 border-r border-border flex flex-col z-40">
+    <>
+      {/* Mobile overlay */}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setOpen(false)}
+        />
+      )}
+      <aside
+        className={cn(
+          "fixed left-0 top-0 h-full w-60 bg-navy-900 border-r border-border flex flex-col z-40 transition-transform duration-200 md:translate-x-0",
+          open ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
       {/* Brand */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-border">
         <div className="w-8 h-8 rounded-lg bg-teal-crm/20 border border-teal-crm/40 flex items-center justify-center flex-shrink-0">
           <Shield className="w-4 h-4 text-teal-crm" />
         </div>
-        <div>
+        <div className="flex-1">
           <div className="text-sm font-bold text-white leading-none">MedTrade</div>
           <div className="text-xs text-muted-foreground mt-0.5">CRM</div>
         </div>
+        <button
+          className="md:hidden text-muted-foreground hover:text-foreground"
+          onClick={() => setOpen(false)}
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Nav */}
@@ -91,6 +114,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all group",
                   isActive
@@ -130,6 +154,7 @@ export function Sidebar() {
           </div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }
