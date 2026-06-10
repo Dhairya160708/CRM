@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 214 35% 10%;
+    --foreground: 210 20% 92%;
+    --card: 214 30% 13%;
+    --card-foreground: 210 20% 92%;
+    --popover: 214 30% 13%;
+    --popover-foreground: 210 20% 92%;
+    --primary: 195 100% 43%;
+    --primary-foreground: 214 35% 8%;
+    --secondary: 214 25% 18%;
+    --secondary-foreground: 210 20% 80%;
+    --muted: 214 25% 18%;
+    --muted-foreground: 210 15% 55%;
+    --accent: 195 100% 43%;
+    --accent-foreground: 214 35% 8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 20% 92%;
+    --border: 214 25% 20%;
+    --input: 214 25% 18%;
+    --ring: 195 100% 43%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-navy-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-navy-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-navy-600;
+  }
+}
+
+@layer utilities {
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}

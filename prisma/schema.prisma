@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  passwordHash String
+  role         Role        @default(VIEWER)
+  name         String
+  isDemo       Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  lastLogin    DateTime?
+  auditLogs    AuditLog[]
+  notes        Note[]
+  gmailToken   GmailToken?
+}
+
+model GmailToken {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime?
+  scope        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+model Client {
+  id            String        @id @default(cuid())
+  nameEncrypted String
+  company       String?
+  country       String
+  language      String?
+  email         String
+  phone         String?
+  tags          String[]
+  isActive      Boolean       @default(true)
+  isDemoData    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  orders        Order[]
+  emailThreads  EmailThread[]
+  notes         Note[]
+}
+
+model Manufacturer {
+  id               String                @id @default(cuid())
+  nameEncrypted    String
+  location         String
+  contactEncrypted String
+  certifications   String[]
+  products         ManufacturerProduct[]
+  orders           Order[]
+  notes            Note[]
+  reliabilityScore Int                   @default(0)
+  isActive         Boolean               @default(true)
+  isDemoData       Boolean               @default(false)
+  createdAt        DateTime              @default(now())
+}
+
+model Product {
+  id            String                @id @default(cuid())
+  name          String
+  casNumber     String?
+  category      String?
+  unit          String
+  isDemoData    Boolean               @default(false)
+  orders        Order[]
+  manufacturers ManufacturerProduct[]
+}
+
+model ManufacturerProduct {
+  id             String       @id @default(cuid())
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  manufacturerId String
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId      String
+  lastPrice      Float?
+  moq            Float?
+  leadTimeDays   Int?
+  updatedAt      DateTime     @updatedAt
+}
+
+model Order {
+  id               String          @id @default(cuid())
+  orderNumber      String          @unique
+  client           Client          @relation(fields: [clientId], references: [id])
+  clientId         String
+  manufacturer     Manufacturer?   @relation(fields: [manufacturerId], references: [id])
+  manufacturerId   String?
+  product          Product         @relation(fields: [productId], references: [id])
+  productId        String
+  quantity         Float
+  unit             String
+  specs            String?
+  targetPrice      Float?
+  confirmedPrice   Float?
+  currency         String          @default("USD")
+  incoterms        String?
+  deliveryCountry  String?
+  status           OrderStatus     @default(INQUIRY)
+  priority         Priority        @default(NORMAL)
+  isDemoData       Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  expectedShipDate DateTime?
+  actualShipDate   DateTime?
+  emailThreads     EmailThread[]
+  documents        Document[]
+  notes            Note[]
+  statusHistory    StatusHistory[]
+}
+
+enum OrderStatus {
+  INQUIRY
+  SOURCING
+  QUOTED
+  NEGOTIATING
+  CONFIRMED
+  IN_PRODUCTION
+  SHIPPED
+  DELIVERED
+  CLOSED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model EmailThread {
+  id            String         @id @default(cuid())
+  gmailThreadId String?        @unique
+  subject       String
+  client        Client?        @relation(fields: [clientId], references: [id])
+  clientId      String?
+  order         Order?         @relation(fields: [orderId], references: [id])
+  orderId       String?
+  messages      EmailMessage[]
+  aiSummary     String?
+  isDemoData    Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model EmailMessage {
+  id          String       @id @default(cuid())
+  thread      EmailThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId    String
+  gmailId     String?      @unique
+  from        String
+  to          String
+  subject     String
+  body        String
+  htmlBody    String?
+  sentAt      DateTime
+  isInbound   Boolean
+  aiExtracted Json?
+  attachments Document[]
+}
+
+model Document {
+  id         String        @id @default(cuid())
+  name       String
+  type       String
+  url        String
+  order      Order?        @relation(fields: [orderId], references: [id])
+  orderId    String?
+  email      EmailMessage? @relation(fields: [emailId], references: [id])
+  emailId    String?
+  uploadedAt DateTime      @default(now())
+}
+
+model Note {
+  id             String        @id @default(cuid())
+  content        String
+  author         User          @relation(fields: [authorId], references: [id])
+  authorId       String
+  client         Client?       @relation(fields: [clientId], references: [id])
+  clientId       String?
+  order          Order?        @relation(fields: [orderId], references: [id])
+  orderId        String?
+  manufacturer   Manufacturer? @relation(fields: [manufacturerId], references: [id])
+  manufacturerId String?
+  createdAt      DateTime      @default(now())
+}
+
+model StatusHistory {
+  id        String      @id @default(cuid())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  from      OrderStatus
+  to        OrderStatus
+  changedBy String
+  changedAt DateTime    @default(now())
+  note      String?
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  action    String
+  entity    String?
+  entityId  String?
+  details   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+}
