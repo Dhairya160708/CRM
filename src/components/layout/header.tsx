@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, LogOut, Menu, Search, User } from "lucide-react";
 import { useSidebar } from "@/components/layout/sidebar-context";
 import {
@@ -15,6 +15,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { formatDateTime } from "@/lib/utils";
+
+interface Notification {
+  id: string;
+  type: "overdue" | "email";
+  title: string;
+  description: string;
+  href: string;
+  createdAt: string;
+}
 
 interface HeaderProps {
   title: string;
@@ -26,6 +36,14 @@ export function Header({ title, subtitle }: HeaderProps) {
   const router = useRouter();
   const { toggle } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    fetch("/api/notifications")
+      .then((res) => (res.ok ? res.json() : { notifications: [] }))
+      .then((data) => setNotifications(data.notifications ?? []))
+      .catch(() => setNotifications([]));
+  }, []);
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -72,13 +90,38 @@ export function Header({ title, subtitle }: HeaderProps) {
           />
         </form>
 
-        {/* Notifications placeholder */}
-        <button className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors relative">
-          <Bell className="w-4 h-4" />
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-teal-crm text-navy-900 text-xs font-bold rounded-full flex items-center justify-center">
-            3
-          </span>
-        </button>
+        {/* Notifications */}
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors relative">
+            <Bell className="w-4 h-4" />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-teal-crm text-navy-900 text-xs font-bold rounded-full flex items-center justify-center">
+                {notifications.length}
+              </span>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-72">
+            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {notifications.length === 0 ? (
+              <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                You&apos;re all caught up
+              </div>
+            ) : (
+              notifications.map((n) => (
+                <DropdownMenuItem
+                  key={n.id}
+                  onClick={() => router.push(n.href)}
+                  className="flex flex-col items-start gap-0.5 cursor-pointer"
+                >
+                  <span className="text-sm font-medium truncate w-full">{n.title}</span>
+                  <span className="text-xs text-muted-foreground truncate w-full">{n.description}</span>
+                  <span className="text-xs text-muted-foreground">{formatDateTime(n.createdAt)}</span>
+                </DropdownMenuItem>
+              ))
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* User menu */}
         <DropdownMenu>
