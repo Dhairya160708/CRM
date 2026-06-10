@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatDateTime } from "@/lib/utils";
 import { Users, Shield, Activity, LogOut, Plus, Trash2, Loader2, Eye, EyeOff, Key, CheckCircle, XCircle, Mail } from "lucide-react";
 import Link from "next/link";
@@ -218,6 +219,18 @@ function SessionTab({ session }: { session: ReturnType<typeof useSession>["data"
                   Disconnect
                 </Button>
               </>
+            ) : session?.user?.isDemo ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button size="sm" className="cursor-not-allowed opacity-60" disabled>
+                      <Mail className="w-3.5 h-3.5 mr-2" />
+                      Connect Gmail
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>This feature is currently unavailable for demo</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <Link href="/api/emails/oauth">
                 <Button size="sm">

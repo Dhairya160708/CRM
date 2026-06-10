@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatDateTime, ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from "@/lib/utils";
 import { Loader2, ArrowLeft, Sparkles, Link2, Mail, User, Package } from "lucide-react";
 import Link from "next/link";
@@ -36,6 +38,8 @@ interface EmailThread {
 }
 
 export default function EmailThreadPage() {
+  const { data: session } = useSession();
+  const isDemo = !!session?.user?.isDemo;
   const { id } = useParams<{ id: string }>();
   const [thread, setThread] = useState<EmailThread | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,20 +163,34 @@ export default function EmailThreadPage() {
                 <CardTitle className="text-sm">Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleParse}
-                  disabled={parsing}
-                >
-                  {parsing ? (
-                    <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3.5 h-3.5 mr-2 text-teal-crm" />
-                  )}
-                  Parse with AI
-                </Button>
+                {isDemo ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button className="w-full cursor-not-allowed opacity-60" variant="outline" size="sm" disabled>
+                          <Sparkles className="w-3.5 h-3.5 mr-2 text-teal-crm" />
+                          Parse with AI
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>This feature is currently unavailable for demo</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleParse}
+                    disabled={parsing}
+                  >
+                    {parsing ? (
+                      <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 mr-2 text-teal-crm" />
+                    )}
+                    Parse with AI
+                  </Button>
+                )}
                 <Button
                   className="w-full"
                   variant="outline"

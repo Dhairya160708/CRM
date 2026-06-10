@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formatDateTime, ORDER_STATUS_COLORS } from "@/lib/utils";
 import {
   Search, Mail, MailOpen, Link2, Plus, RefreshCw, Loader2,
@@ -31,6 +33,8 @@ interface EmailThread {
 }
 
 export default function EmailsPage() {
+  const { data: session } = useSession();
+  const isDemo = !!session?.user?.isDemo;
   const [threads, setThreads] = useState<EmailThread[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -76,26 +80,6 @@ export default function EmailsPage() {
     void fetchThreads();
     void checkGmailStatus();
   }, [fetchThreads, checkGmailStatus]);
-
-  // Auto-sync every 5 minutes when Gmail is connected
-  useEffect(() => {
-    if (!gmailConnected) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch("/api/emails/sync", { method: "POST" });
-        if (res.ok) {
-          const data = await res.json() as { synced?: number; filtered?: number };
-          setLastSyncAt(new Date());
-          if ((data.synced ?? 0) > 0) {
-            toast.info(`Auto-synced ${data.synced} new thread${data.synced !== 1 ? "s" : ""}` +
-              (data.filtered ? ` · ${data.filtered} filtered` : ""));
-            void fetchThreads();
-          }
-        }
-      } catch { /* silent */ }
-    }, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [gmailConnected, fetchThreads]);
 
   async function syncGmail(fullSync = false) {
     if (fullSync) setFullSyncing(true);
@@ -219,6 +203,18 @@ export default function EmailsPage() {
                   {fullSyncing ? "Scanning…" : "Full Scan"}
                 </Button>
               </>
+            ) : isDemo ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-amber-crm border-amber-crm/40 cursor-not-allowed opacity-60" disabled>
+                      <WifiOff className="w-3.5 h-3.5 mr-2" />
+                      Connect Gmail
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>This feature is currently unavailable for demo</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             ) : (
               <Link href="/api/emails/oauth">
                 <Button variant="outline" size="sm" className="text-amber-crm border-amber-crm/40 hover:bg-amber-crm/10">
@@ -254,7 +250,7 @@ export default function EmailsPage() {
         {gmailConnected && (
           <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
             <Wifi className="w-3.5 h-3.5 text-teal-crm" />
-            <span>Gmail connected · AI filters non-business emails · auto-syncs every 5 min</span>
+            <span>Gmail connected · AI filters non-business emails · auto-syncs daily</span>
             {lastSyncAt && (
               <span className="ml-auto">Last sync: {lastSyncAt.toLocaleTimeString()}</span>
             )}
@@ -295,6 +291,7 @@ export default function EmailsPage() {
                 isParsing={parsingId === thread.id}
                 onRefresh={fetchThreads}
                 onDelete={() => setDeleteTarget(thread)}
+                isDemo={isDemo}
               />
             ))}
           </div>
@@ -327,6 +324,7 @@ function ThreadRow({
   isParsing,
   onRefresh: _onRefresh,
   onDelete,
+  isDemo,
 }: {
   thread: EmailThread;
   onLink: () => void;
@@ -334,6 +332,7 @@ function ThreadRow({
   isParsing: boolean;
   onRefresh: () => void;
   onDelete: () => void;
+  isDemo: boolean;
 }) {
   const firstMsg = thread.messages[0];
   const isUnlinked = !thread.order;
@@ -399,20 +398,34 @@ function ThreadRow({
                 View
               </Button>
             </Link>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={onParse}
-              disabled={isParsing}
-            >
-              {isParsing ? (
-                <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3 h-3 mr-1.5 text-teal-crm" />
-              )}
-              AI Parse
-            </Button>
+            {isDemo ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs cursor-not-allowed opacity-60" disabled>
+                      <Sparkles className="w-3 h-3 mr-1.5 text-teal-crm" />
+                      AI Parse
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>This feature is currently unavailable for demo</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={onParse}
+                disabled={isParsing}
+              >
+                {isParsing ? (
+                  <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                ) : (
+                  <Sparkles className="w-3 h-3 mr-1.5 text-teal-crm" />
+                )}
+                AI Parse
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"

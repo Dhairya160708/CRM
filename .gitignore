@@ -43,3 +43,5 @@ prisma/*.db-journal
 dev-server.log
 dev-server-err.log
 tsc_output.txt
+
+.vercel
