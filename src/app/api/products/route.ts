@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { demoWhere, demoFlag } from "@/lib/demo";
+import { demoFlag } from "@/lib/demo";
+import { getProducts } from "@/lib/queries/products";
 import { z } from "zod";
 
 const ProductSchema = z.object({
@@ -17,25 +18,13 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get("search");
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "100");
 
-  const where: Record<string, unknown> = { ...demoWhere(session) };
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { casNumber: { contains: search, mode: "insensitive" } },
-      { category: { contains: search, mode: "insensitive" } },
-    ];
-  }
-
-  const products = await prisma.product.findMany({
-    where,
-    include: { _count: { select: { orders: true, manufacturers: true } } },
-    orderBy: { name: "asc" },
-    skip: (page - 1) * limit,
-    take: limit,
+  const products = await getProducts(session, {
+    search: searchParams.get("search"),
+    page,
+    limit,
   });
 
   return NextResponse.json(products);

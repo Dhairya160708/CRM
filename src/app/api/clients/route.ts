@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { encrypt, decrypt } from "@/lib/encryption";
+import { encrypt } from "@/lib/encryption";
 import { logAudit, AuditActions } from "@/lib/audit";
-import { demoWhere, demoFlag } from "@/lib/demo";
+import { demoFlag } from "@/lib/demo";
+import { getClients } from "@/lib/queries/clients";
 import { z } from "zod";
 
 const ClientSchema = z.object({
@@ -27,32 +28,9 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "100");
 
-  const clients = await prisma.client.findMany({
-    where: demoWhere(session),
-    select: {
-      id: true,
-      nameEncrypted: true,
-      company: true,
-      country: true,
-      language: true,
-      tags: true,
-      isActive: true,
-      createdAt: true,
-      _count: { select: { orders: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
+  const clients = await getClients(session, { page, limit });
 
-  const decrypted = clients.map(({ nameEncrypted, ...c }) => ({
-    ...c,
-    name: decrypt(nameEncrypted),
-  }));
-
-  await logAudit({ userId: session.user.id, action: AuditActions.VIEW_CLIENT, entity: "Client" });
-
-  return NextResponse.json(decrypted);
+  return NextResponse.json(clients);
 }
 
 export async function POST(req: NextRequest) {

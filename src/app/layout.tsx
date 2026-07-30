@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { Providers } from "./providers";
@@ -20,9 +20,17 @@ const fontMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MedTrade CRM",
+  title: {
+    default: "MedTrade CRM",
+    template: "%s · MedTrade CRM",
+  },
   description: "Pharmaceutical raw materials trading CRM",
-  robots: "noindex, nofollow",
+  applicationName: "MedTrade CRM",
+  robots: { index: false, follow: false },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0D1B2A",
 };
 
 export default function RootLayout({

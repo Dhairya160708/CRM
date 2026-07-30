@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { decrypt } from "@/lib/encryption";
 import { logAudit, AuditActions } from "@/lib/audit";
-import { demoWhere, demoFlag } from "@/lib/demo";
+import { demoFlag } from "@/lib/demo";
+import { getOrders } from "@/lib/queries/orders";
 import { z } from "zod";
 
 const CreateOrderSchema = z.object({
@@ -27,59 +27,18 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status");
-  const clientId = searchParams.get("clientId");
-  const search = searchParams.get("search");
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "25");
 
-  const where: Record<string, unknown> = { ...demoWhere(session) };
-  if (status) where.status = status;
-  if (clientId) where.clientId = clientId;
-  if (search) {
-    where.OR = [
-      { orderNumber: { contains: search, mode: "insensitive" } },
-      { product: { name: { contains: search, mode: "insensitive" } } },
-      { deliveryCountry: { contains: search, mode: "insensitive" } },
-    ];
-  }
+  const result = await getOrders(session, {
+    status: searchParams.get("status"),
+    clientId: searchParams.get("clientId"),
+    search: searchParams.get("search"),
+    page,
+    limit,
+  });
 
-  const [orders, total] = await Promise.all([
-    prisma.order.findMany({
-      where,
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        priority: true,
-        quantity: true,
-        unit: true,
-        targetPrice: true,
-        confirmedPrice: true,
-        currency: true,
-        deliveryCountry: true,
-        updatedAt: true,
-        createdAt: true,
-        client: { select: { id: true, nameEncrypted: true, country: true } },
-        product: { select: { id: true, name: true } },
-        manufacturer: { select: { id: true, nameEncrypted: true } },
-      },
-      orderBy: { updatedAt: "desc" },
-      skip: (page - 1) * limit,
-      take: limit,
-    }),
-    prisma.order.count({ where }),
-  ]);
-
-  const decryptedOrders = orders.map((o) => ({
-    ...o,
-    client: { ...o.client, name: decrypt(o.client.nameEncrypted) },
-    manufacturer: o.manufacturer
-      ? { ...o.manufacturer, name: decrypt(o.manufacturer.nameEncrypted) }
-      : null,
-  }));
-
-  return NextResponse.json({ orders: decryptedOrders, total, page, limit });
+  return NextResponse.json(result);
 }
 
 export async function POST(req: NextRequest) {

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { encrypt, decrypt } from "@/lib/encryption";
+import { encrypt } from "@/lib/encryption";
 import { logAudit, AuditActions } from "@/lib/audit";
-import { demoWhere, demoFlag } from "@/lib/demo";
+import { demoFlag } from "@/lib/demo";
+import { getManufacturers } from "@/lib/queries/manufacturers";
 import { z } from "zod";
 
 const ManufacturerSchema = z.object({
@@ -25,31 +26,9 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") ?? "1");
   const limit = parseInt(searchParams.get("limit") ?? "100");
 
-  const manufacturers = await prisma.manufacturer.findMany({
-    where: demoWhere(session),
-    select: {
-      id: true,
-      nameEncrypted: true,
-      location: true,
-      certifications: true,
-      reliabilityScore: true,
-      isActive: true,
-      createdAt: true,
-      _count: { select: { orders: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    skip: (page - 1) * limit,
-    take: limit,
-  });
+  const manufacturers = await getManufacturers(session, { page, limit });
 
-  const decrypted = manufacturers.map(({ nameEncrypted, ...m }) => ({
-    ...m,
-    name: decrypt(nameEncrypted),
-  }));
-
-  await logAudit({ userId: session.user.id, action: AuditActions.VIEW_MANUFACTURER, entity: "Manufacturer" });
-
-  return NextResponse.json(decrypted);
+  return NextResponse.json(manufacturers);
 }
 
 export async function POST(req: NextRequest) {
